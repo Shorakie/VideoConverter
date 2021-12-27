@@ -1,5 +1,5 @@
 """
-WSGI config for video_convertor project.
+WSGI config for video_converter project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

@@ -1,5 +1,5 @@
 """
-ASGI config for video_convertor project.
+ASGI config for video_converter project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
