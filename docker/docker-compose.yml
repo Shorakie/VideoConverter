@@ -1,0 +1,61 @@
+version: "3.9"
+   
+services:
+  db:
+    image: postgres:14.1
+    restart: always
+    healthcheck:
+      test: /usr/bin/pg_isready -d vcdb -U vcdbadmin
+      interval: 5s
+      timeout: 10s
+      retries: 6
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=vcdb
+      - POSTGRES_USER=vcdbadmin
+      - POSTGRES_PASSWORD=vcdbpassword
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: video_converter_web
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    environment:
+      - DB_NAME=vcdb
+      - DB_USER=vcdbadmin
+      - DB_PASSWORD=vcdbpassword
+      - DB_HOST=db
+      - DB_PORT=5432
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../:/api/
+    networks:
+      - backend
+
+volumes:
+  dbdata:
+
+networks:
+  backend:
