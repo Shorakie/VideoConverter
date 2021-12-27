@@ -32,7 +32,6 @@ _migrate() {
 }
 
 _main() {
-	log_note "$PWD"
 	_migrate
 
 	log_note "Executing $@"
