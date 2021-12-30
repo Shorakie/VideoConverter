@@ -32,7 +32,11 @@ _migrate() {
 }
 
 _main() {
-	_migrate
+	if [ $1 = "--migrate" ]; then
+		shift
+		_migrate
+	fi
+
 
 	log_note "Executing $@"
     exec "$@" >&1
