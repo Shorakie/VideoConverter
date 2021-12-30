@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import logging.config
 from datetime import timedelta
 from pathlib import Path
 
@@ -41,7 +42,7 @@ APP_VERSION = '1.0.0'
 APP_NAME = 'video_converter'
 APP_DESCRIPTION = 'A RESTfull API for converting video formats'
 
-MY_APPS = ['apps.authentication']
+MY_APPS = ['apps.authentication', 'apps.video']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -52,6 +53,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'django_celery_beat',
+    'drf_yasg',
 ] + MY_APPS
 
 MIDDLEWARE = [
@@ -63,7 +66,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middlewares.RemainingConversionTimeMiddleware',
 ]
+
+LOGIN_URL = '/auth/login/'
 
 ROOT_URLCONF = 'config.urls'
 
@@ -120,6 +126,42 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Logging configuration
+# https://docs.djangoproject.com/en/4.0/topics/logging/#configuring-logging
+
+LOGGING_CONFIG = None  # This empties out Django's logging config
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s %(levelname)s module=%(module)s, '
+            'process_id=%(process)d, %(message)s'
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+logging.config.dictConfig(LOGGING)
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
@@ -138,10 +180,24 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# File uploads
+# https://docs.djangoproject.com/en/4.0/ref/settings/#file-uploads
+
+MEDIA_ROOT = 'media/'
+MEDIA_URL = getenv('MEDIA_URL', type=str, default='')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# django-yasg
+# https://drf-yasg.readthedocs.io/en/stable/settings.html
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {'type': 'apiKey', 'name': 'Authorization', 'in': 'header'}
+    }
+}
 
 # django-cors-headers
 # https://pypi.org/project/django-cors-headers/
@@ -166,8 +222,22 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100,
 }
 
+# Simple JWT
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'UPDATE_LAST_LOGIN': True,
 }
+
+# Celery Configuration Options
+# https://docs.celeryproject.org/en/stable/userguide/configuration.html
+CELERY_TIMEZONE = getenv('TIME_ZONE', default='UTC')
+CELERY_BROKER_URL = f'amqp://{getenv("BROKER_USER")}:{getenv("BROKER_PASS")}@{getenv("BROKER_HOST")}:{getenv("BROKER_PORT")}'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_ROUTES = {
+    'apps.video.tasks.convert_video': 'video',
+}
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

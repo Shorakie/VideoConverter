@@ -34,4 +34,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger'),
     path('api/auth/', include('apps.authentication.urls')),
+    path('api/videos/', include('apps.video.urls')),
 ]
