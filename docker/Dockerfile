@@ -17,8 +17,8 @@ WORKDIR /api
 COPY requirements.txt /api/
 RUN pip3 install -r requirements.txt
 
-# django-celery-beats' current dependancy is Django>=2.2,<4.0
-# there is a fix on master rep but not released so we use the git
+# django-celery-beats' current dependency is Django>=2.2,<4.0
+# there is a fix on master repo but not released so we install from git
 RUN pip3 install git+https://github.com/celery/django-celery-beat.git
 
 COPY . /api/

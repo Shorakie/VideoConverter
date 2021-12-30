@@ -25,6 +25,10 @@ After cloning the project we setup a virtual environment and install dependencie
 $ python3 -m venv .venv
 $ source .venv/bin/activate
 $ python install -r requirements.txt
+
+# django-celery-beats' current dependency is Django>=2.2,<4.0
+# there is a fix on master repo but not released so we install from git
+$ pip install git+https://github.com/celery/django-celery-beat.git
 ```
 
 Build a docker image
@@ -120,6 +124,7 @@ The `apps/` contains Django applications which are `authentication` and `video`
 - [Celery](https://docs.celeryproject.org) - Task Queue
 - [RabbitMQ](https://www.rabbitmq.com) - Message Broker
 - [PostgresSQL](https://www.postgresql.org) - Database
+- [Adminer](https://www.adminer.org) - Database Manager
 - [NginX](https://www.nginx.com) - Serve converted files
 - [django-yasg](https://drf-yasg.readthedocs.io) - Auto generate swagger documentation
 
